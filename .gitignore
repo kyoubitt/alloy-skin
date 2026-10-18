@@ -1,0 +1,6 @@
+# your own CurseForge key never goes in the repo
+curseforge.headers
+*.so
+*.so.new
+env.js
+*.log

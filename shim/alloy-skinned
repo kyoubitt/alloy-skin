@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Launch Alloy with the XMCL skin. Undo: point the .desktop files back at the AppImage.
+# Small copies of animated instance icons: a full-size GIF decoded at 25 fps for a 40px tile
+# is what made the launcher heavy. Lives in Alloy's backgrounds folder so the page may load it.
+cache_icons() {
+  local data cache json icon src slug out
+  data=$(sed -n 's/.*"dataDir": *"\(.*\)".*/\1/p' "$HOME/.config/dev.steelaspect.alloy/settings.json")
+  data=${data:-$HOME/.local/share/AlloyLauncher}
+  cache="$HOME/.config/dev.steelaspect.alloy/backgrounds/xmcl-icons"
+  mkdir -p "$cache"
+  for json in "$data"/instances/*/instance.json; do
+    icon=$(sed -n 's/.*"icon": *"file:\(.*\)".*/\1/p' "$json")
+    [ -n "$icon" ] || continue
+    src="$(dirname "$json")/$icon"
+    slug=$(basename "$(dirname "$json")" | sed 's/[^A-Za-z0-9]/_/g')
+    out="$cache/$slug-v2.gif"
+    [ "$out" -nt "$src" ] && continue
+    frames=$(magick identify "$src" 2>/dev/null | wc -l)
+    [ "$frames" -gt 1 ] || { rm -f "$out"; continue; }
+    # every redrawn frame costs WebKitGTK a fixed chunk of CPU, so keep half the frames at double delay
+    delay=$(magick identify -format '%T\n' "$src" | head -1)
+    drop=$(seq -s, 1 2 $((frames - 1)))
+    magick "$src" -coalesce ${drop:+-delete "$drop"} -resize 112x112 -set delay $(( ${delay:-4} * 2 )) \
+      -layers Optimize "$out.tmp.gif" && mv "$out.tmp.gif" "$out"
+    rm -f "$cache/$slug.gif"
+  done
+}
+command -v magick >/dev/null && (cache_icons >/dev/null 2>&1 &)
+
+export LD_PRELOAD="$HOME/.local/lib/alloy-skin/alloyskin.so${LD_PRELOAD:+:$LD_PRELOAD}"
+export ALLOY_SKIN_CSS="${ALLOY_SKIN_CSS:-$HOME/.config/alloy-skin/xmcl.css}"
+# paths the page script needs but can't look up itself
+printf 'window.__XMCL_ENV = { iconCache: "%s", packs: "%s" };\n' "$HOME/.config/dev.steelaspect.alloy/backgrounds/xmcl-icons" "${XDG_CACHE_HOME:-$HOME/.cache}/alloy-skin/packs" > "$HOME/.config/alloy-skin/env.js"
+export ALLOY_SKIN_JS="$HOME/.config/alloy-skin/env.js:$HOME/.config/alloy-skin/xmcl.js:$HOME/.config/alloy-skin/curseforge.js:$HOME/.config/alloy-skin/pages.js${ALLOY_SKIN_JS:+:$ALLOY_SKIN_JS}"
+# CurseForge bridge (bridge.c): the key file stays private to curl; downloads may only land in this data dir
+export ALLOY_SKIN_CF_HEADERS="$HOME/.config/alloy-skin/curseforge.headers"
+data=$(sed -n 's/.*"dataDir": *"\(.*\)".*/\1/p' "$HOME/.config/dev.steelaspect.alloy/settings.json")
+export ALLOY_SKIN_DATA="${data:-$HOME/.local/share/AlloyLauncher}"
+# CurseForge modpack zips wait here for Alloy's own importer
+export ALLOY_SKIN_PACKS="${XDG_CACHE_HOME:-$HOME/.cache}/alloy-skin/packs"
+mkdir -p "$ALLOY_SKIN_PACKS"
+# resource pack icons pulled out of their zips (bridge PI); Alloy's backgrounds folder is readable by the page
+export ALLOY_SKIN_ICONS="$HOME/.config/dev.steelaspect.alloy/backgrounds/xmcl-icons"
+mkdir -p "$ALLOY_SKIN_ICONS"
+# Minecraft gets the RTX 4050; the launcher window itself stays on the integrated GPU.
+# Empty this to let the game follow whatever environment Alloy was started with.
+export ALLOY_SKIN_GAME_ENV="__NV_PRIME_RENDER_OFFLOAD=1;__GLX_VENDOR_LIBRARY_NAME=nvidia;VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json"
+
+exec "$HOME/Applications/Alloy.AppImage" "$@"
