@@ -33,61 +33,26 @@
     }
   }
 
-  // ---------- wheel ----------
+  // ---------- settings ----------
 
-  // Alloy's Appearance → Smooth scrolling; read once, then kept in sync when it's flipped
-  let smooth = true;
-  for (const cmd of ['get_settings', 'load_settings', 'settings']) {
-    T?.invoke(cmd).then((s) => { if (s && typeof s.smoothScrolling === 'boolean') smooth = s.smoothScrolling; }).catch(() => {});
-  }
+  // Alloy's home card arrangement: while it's still the default (nothing arranged), the cards fit their contents.
+  // Re-read after clicks on the page so arranging cards switches this off straight away.
+  const readSettings = () => T?.invoke('get_settings').then((s) => {
+    if (s && Array.isArray(s.homeCards)) document.documentElement.classList.toggle('skin-fit', s.homeCards.length === 0);
+  }).catch(() => {});
+  readSettings();
+  let reread;
   document.addEventListener('click', (e) => {
-    const row = e.target.closest?.('.row, label');
-    if (row && /smooth scrolling/i.test(row.textContent)) setTimeout(() => { const box = row.querySelector('input[type=checkbox]'); if (box) smooth = box.checked; }, 0);
+    if (e.target.closest?.('main')) { clearTimeout(reread); reread = setTimeout(readSettings, 800); }
   }, true);
 
-  const STEP = 90; // px per wheel notch on the page; boxes inside the page move a bit less
-  const pageScroller = () => document.querySelector('main');
-  function scrollableAncestor(el) {
-    for (; el && el !== document.body; el = el.parentElement) {
-      if (el.scrollHeight <= el.clientHeight + 1) continue;
-      const oy = getComputedStyle(el).overflowY;
-      if (oy === 'auto' || oy === 'scroll') return el;
-    }
-    return null;
-  }
+  // ---------- no sideways page scroll ----------
 
-  const glides = new Map(); // element -> { target, from, start }
-  function glide(box, dy) {
-    const max = box.scrollHeight - box.clientHeight;
-    const g = glides.get(box);
-    const target = Math.max(0, Math.min(max, (g ? g.target : box.scrollTop) + dy));
-    const state = { target, from: box.scrollTop, start: performance.now() };
-    glides.set(box, state);
-    if (g) return; // the running animation picks up the new target
-    const frame = (now) => {
-      const s = glides.get(box);
-      if (!s) return;
-      const t = Math.min(1, (now - s.start) / 110);
-      box.scrollTop = s.from + (s.target - s.from) * (1 - (1 - t) ** 3);
-      if (t < 1) requestAnimationFrame(frame);
-      else glides.delete(box);
-    };
-    requestAnimationFrame(frame);
-  }
-
-  document.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    if (e.target.closest?.('select, input[type=range], canvas')) return; // the skin viewer zooms with the wheel
-    const box = scrollableAncestor(e.target);
-    if (!box) return;
-    const inner = box !== pageScroller() && box !== document.scrollingElement;
-    const notch = Math.abs(e.deltaY) >= 50 || e.deltaMode !== 0;
-    // touchpads send many small deltas: pass them through as they are
-    let dy = notch ? Math.sign(e.deltaY) * STEP * (inner ? 0.7 : 1) : e.deltaY;
-    e.preventDefault();
-    if (smooth && notch) glide(box, dy);
-    else { glides.delete(box); box.scrollTop += dy; }
-  }, { passive: false });
+  // the screenshot carousel scrolls itself into view, which also slid the whole page sideways; put it back
+  document.addEventListener('scroll', (e) => {
+    const t = e.target;
+    if (t.scrollLeft && t.matches?.('main, .shell, .shell > .body')) t.scrollLeft = 0;
+  }, true);
 
   // ---------- wiring ----------
 

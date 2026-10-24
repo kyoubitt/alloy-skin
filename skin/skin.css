@@ -25,9 +25,10 @@ main header.head h1 { letter-spacing: -.01em !important; }
 main header.head ul.chips { gap: 0 !important; }
 main header.head ul.chips > li {
   border: none !important; background: none !important; padding: 0 !important;
-  color: var(--text-muted) !important; font-size: .88rem !important;
+  color: color-mix(in srgb, var(--text) 85%, transparent) !important; font-size: .88rem !important;
 }
-main header.head ul.chips > li + li::before { content: "·" !important; margin: 0 .55em !important; color: var(--text-faint) !important; }
+main header.head ul.chips { flex-wrap: wrap !important; }
+main header.head ul.chips > li:not(:last-child)::after { content: "·" !important; margin: 0 .55em !important; color: var(--text-faint) !important; }
 main header.head ul.chips > li svg { width: 14px !important; height: 14px !important; margin-right: 5px !important; vertical-align: -2px !important; }
 
 /* ---------- buttons: the accent is for Play (and the one main action of a dialog) only ---------- */
@@ -57,7 +58,7 @@ main header.head ul.chips > li svg { width: 14px !important; height: 14px !impor
 ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--text) 30%, transparent) !important; }
 
 /* ---------- Play time: hidden (classic home panel, and the card in the card layout, tagged by skin.js) ---------- */
-section.panel.playtime, section.card.skin-playtime { display: none !important; }
+section.panel.playtime, section.card.skin-playtime, html.skin-fit main .grid > section.card.skin-playtime { display: none !important; }
 
 /* ---------- readable small text everywhere: no grey below --text-muted ---------- */
 .faint, .muted, .sub, h2.sub, p.count, small, .small,
@@ -82,6 +83,7 @@ main nav.tabs {
   background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
 }
 main nav.tabs .tab:not(.active) { color: var(--text-muted) !important; }
+main nav.tabs { flex-wrap: wrap !important; overflow: visible !important; }
 /* the instance's mod / pack / world lists */
 main section.body ul.items {
   padding: 4px 6px !important; border-radius: var(--radius-md, 10px) !important;
@@ -98,11 +100,15 @@ html[data-theme=dark] :is(main > h1, main > h2, main .head h1, main .head li, ma
 main header.head .tools .btn-ghost.square { color: var(--text) !important; }
 main header.head .tools .btn-ghost.square:hover { background: color-mix(in srgb, var(--text) 10%, transparent) !important; }
 
-/* ---------- Home rows (classic layouts): the name shrinks first, nothing pokes out of the panel ---------- */
-main .rows .row { grid-template-columns: 32px minmax(60px, 1fr) repeat(6, auto) !important; }
-main .rows .row > span { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-main .rows .row > span.play { overflow: visible !important; }
-@media (max-width: 900px) { main .rows .row > span.faint:nth-of-type(5) { display: none !important; } }
+/* ---------- Home rows and the Instances table: fixed columns so every row and the heading line up; the name shrinks first ---------- */
+main .rows > * { grid-template-columns: 32px minmax(80px, 1fr) 118px 62px 88px 92px 84px 28px !important; }
+main .rows > * > span { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+main .rows > * > span.play { overflow: visible !important; justify-self: end !important; }
+/* narrow windows: drop the "played" column */
+@media (max-width: 1000px) {
+  main .rows > * { grid-template-columns: 32px minmax(80px, 1fr) 118px 62px 88px 84px 28px !important; }
+  main .rows > * > :nth-child(6) { display: none !important; }
+}
 
 /* ---------- card grid: columns can shrink, so it never runs off the side ---------- */
 main .grid { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
@@ -128,3 +134,30 @@ main .cards > button.new:hover { color: var(--text) !important; border-color: co
 
 /* ---------- Settings: a field's hint goes under its label instead of running into it ---------- */
 label.field > span:first-child > .faint { display: block !important; margin-top: 2px !important; font-size: .82em !important; font-weight: 400 !important; }
+
+/* ---------- home cards, until you arrange them yourself (skin.js sets html.skin-fit):
+   they stack in up to three columns, each card as tall as its contents, so there are no half-empty boxes.
+   "Arrange cards" still shows Alloy's own grid, and once you've arranged them your sizes are used as they are. ---------- */
+html.skin-fit main .grid:not(.editing) { display: block !important; columns: 3 300px !important; column-gap: 12px !important; }
+html.skin-fit main .grid:not(.editing) > .card {
+  break-inside: avoid !important; width: 100% !important; height: auto !important; min-height: 0 !important;
+  margin: 0 0 12px !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important;
+}
+html.skin-fit main .grid:not(.editing) > .card .body > ul { max-height: 220px !important; overflow-y: auto !important; }
+html.skin-fit main .grid:not(.editing) > .card .frame { height: auto !important; aspect-ratio: 16 / 9 !important; max-height: none !important; }
+html.skin-fit main .grid:not(.editing) > .card .body > p.faint.small { height: auto !important; padding: 10px 0 !important; }
+
+/* ---------- Card grid side panels (Servers, Mod updates): same padding, title never clipped ---------- */
+main aside.side > section.panel { padding: 14px 16px !important; overflow: visible !important; }
+main aside.side > section.panel > :is(h2, h3, header) { margin-top: 0 !important; line-height: 1.3 !important; }
+
+
+/* ---------- Logs page: the toolbar wraps instead of squashing its labels or pushing Clear off the edge ---------- */
+main .bar { flex-wrap: wrap !important; row-gap: 8px !important; }
+main .bar > :is(.btn, label, button) { white-space: nowrap !important; flex-shrink: 0 !important; }
+main .bar > .input { flex: 1 1 140px !important; min-width: 100px !important; }
+/* an empty log says so in the middle of the box */
+main .console:has(> p.empty) { display: grid !important; place-items: center !important; }
+main .console > p.empty { text-align: center !important; margin: 0 !important; }
+main .bar > select, main .bar > .select { flex: 0 1 150px !important; min-width: 100px !important; }
+main aside.side > section.panel :is(h2, h3) { color: var(--text) !important; font-size: .95rem !important; font-weight: 600 !important; }
