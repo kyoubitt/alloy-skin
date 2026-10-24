@@ -1,8 +1,8 @@
 // alloyskin: LD_PRELOAD shim for the Alloy launcher.
 //  - adds $ALLOY_SKIN_CSS as a user stylesheet and reloads it live when the file changes
 //  - injects the scripts listed in $ALLOY_SKIN_JS (colon-separated) and swaps them when a file changes;
-//    they take effect when the page next loads (xmcl.js reloads it while the window is in the background)
-//  - exposes a small allowlisted CurseForge bridge to those scripts (bridge.c)
+//    they take effect when the page next loads
+//  - lets Alloy's page render at the display's refresh rate instead of ~60 fps
 //  - keeps Alloy's own UI on the integrated GPU, but hands $ALLOY_SKIN_GAME_ENV
 //    (";"-separated KEY=VALUE pairs) to the java process it launches
 // Alloy registers Tauri init scripts through webkit_user_content_manager_add_script;
@@ -185,14 +185,11 @@ static int watch_css(void *unused) {
     return 1;
 }
 
-void alloyskin_bridge_attach(void *mgr); // bridge.c
-
 #define MAX_SCRIPTS 16
 static void *ours[MAX_MGRS][MAX_SCRIPTS]; // our WebKitUserScripts per content manager, so they can be swapped
 static int nours[MAX_MGRS];
 static add_fn real_add;
 static long js_sig;
-int alloyskin_js_gen; // bumped when the scripts change; bridge.c reports it to the page
 
 // changes whenever a listed script is saved
 static long scripts_sig(void) {
@@ -241,7 +238,6 @@ static void watch_scripts(void) {
         nours[i] = 0;
         attach_scripts(i);
     }
-    alloyskin_js_gen++;
     fprintf(stderr, "alloyskin: scripts reloaded\n");
 }
 
@@ -255,7 +251,6 @@ void webkit_user_content_manager_add_script(void *mgr, void *script) {
         seen[nseen++] = mgr;
         real_add = real;
         load_css(mgr);
-        alloyskin_bridge_attach(mgr);
         attach_scripts(nseen - 1);
         fprintf(stderr, "alloyskin: attached\n");
         if (nseen == 1) {
@@ -270,15 +265,6 @@ void webkit_user_content_manager_add_script(void *mgr, void *script) {
 // WebKit caps page rendering near 60 fps by default; on a 144 Hz screen that means every other frame (72 fps),
 // which makes scrolling look half as smooth as other apps. Alloy asks its web view for the settings object,
 // so turn that cap off on it the first time it's handed out.
-void *alloyskin_settings; // the web view's settings; bridge.c flips smooth scrolling on it live
-
-// WebKit glides every wheel step (smooth scrolling); the page then trails your input, which feels like lag.
-// Off by default; the Appearance page can turn it back on through the bridge (SMOOTH 1).
-void alloyskin_set_smooth(int on) {
-    void (*smooth)(void *, int) = (void (*)(void *, int))dlsym(RTLD_DEFAULT, "webkit_settings_set_enable_smooth_scrolling");
-    if (smooth && alloyskin_settings) smooth(alloyskin_settings, on);
-}
-
 static void uncap_frame_rate(void *settings) {
     static void *done[8];
     for (int i = 0; i < 8; i++) {
@@ -291,8 +277,6 @@ static void uncap_frame_rate(void *settings) {
     const char *(*ident)(void *) = (const char *(*)(void *))dlsym(RTLD_DEFAULT, "webkit_feature_get_identifier");
     void (*set)(void *, void *, int) = (void (*)(void *, void *, int))dlsym(RTLD_DEFAULT, "webkit_settings_set_feature_enabled");
     void (*unref)(void *) = (void (*)(void *))dlsym(RTLD_DEFAULT, "webkit_feature_list_unref");
-    alloyskin_settings = settings;
-    alloyskin_set_smooth(0);
     if (!all || !len || !get || !ident || !set) return;
     void *list = all();
     if (getenv("ALLOY_SKIN_DEBUG")) fprintf(stderr, "alloyskin: settings %p, %lu features\n", settings, list ? len(list) : 0);

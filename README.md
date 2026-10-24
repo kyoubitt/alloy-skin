@@ -1,24 +1,27 @@
-# alloy-xmcl-skin
+# alloy-skin
 
-A reskin for the [Alloy](https://github.com/SteelAspect/alloy-releases) Minecraft launcher on Linux, styled after XMCL with bits of the Modrinth app, NoRisk and Prism.
+Small polish for the [Alloy](https://github.com/SteelAspect/alloy-releases) Minecraft launcher on Linux.
 
-Alloy is closed source, so this doesn't patch it. A small `LD_PRELOAD` library (`shim/`) adds a user stylesheet and scripts to Alloy's webview, and the skin (`skin/`) does the rest.
+Alloy itself has the card home, artwork instances page, CurseForge, modpacks, log console and skin gallery. This adds a few fixes on top:
 
-## What you get
-- XMCL-style home: header with PLAY, plus cards for mods, saves, shaders, resource packs, screenshots, logs and servers. Drag to move, resize or hide them.
-- All four Alloy layouts reworked: Sidebar, Hero (full artwork launcher screen), Card grid and Compact list (wide rail with names).
-- Instance pages with tabs on top, an Instances page with artwork tiles and a details panel.
-- CurseForge search and installs, modpacks from Modrinth, CurseForge, FTB and ATLauncher.
-- A Prism-style New instance page, a log console with mclo.gs upload, and a skin gallery.
-- Glass panels over your background picture, accent colour taken from the picture, and your own GIF/MP4 overlay effects.
-- 144 Hz scrolling (WebKit caps Alloy at ~72 fps otherwise). Minecraft runs on the NVIDIA GPU while the launcher stays on the iGPU.
+- Text stays readable over any background picture: lists, tab bars and loose labels get a solid backing, and small grey text has a readable minimum.
+- The Play time card is hidden.
+- Calmer wheel scrolling, one even step per notch (a short glide when Alloy's Smooth scrolling is on). A scroll that starts in a box, like the log or a mod list, stays in that box.
+- Only Play uses the accent colour, so Install buttons don't compete with it.
+- Info pills in the instance header become one plain line.
+- The Arrange-cards resize corner is easy to see.
+- Plain layout names: "Modern" instead of "XMCL".
+- The page draws at your display's refresh rate (WebKit otherwise holds it near 60 fps, which halves smoothness on a 144 Hz screen).
+- Minecraft starts on the NVIDIA GPU, while the launcher stays on the integrated one.
+
+Colours come from Alloy's own colour schemes, so every scheme and your accent colour keep working.
 
 ## Install
-Needs `gcc`, `pkg-config`, GLib/GIO headers, `curl` and `unzip`. ImageMagick is optional, for lighter animated icons.
+Needs `gcc`, `pkg-config` and the GLib/GIO headers.
 
 ```sh
-git clone https://github.com/kyoubitt/alloy-xmcl-skin ~/src/alloy-xmcl-skin
-cd ~/src/alloy-xmcl-skin
+git clone https://github.com/kyoubitt/alloy-skin ~/src/alloy-skin
+cd ~/src/alloy-skin
 make install
 ```
 
@@ -26,17 +29,8 @@ Put the Alloy AppImage at `~/Applications/Alloy.AppImage`, then start Alloy with
 
 If you don't have an NVIDIA laptop, empty `ALLOY_SKIN_GAME_ENV` in `shim/alloy-skinned`.
 
-## CurseForge
-CurseForge needs an API key, and **you have to use your own**; none ships with this.
-1. Get a key at https://console.curseforge.com.
-2. Save it like `curseforge.headers.example`:
-   ```sh
-   printf 'x-api-key: %s\n' 'YOUR_KEY' > ~/.config/alloy-skin/curseforge.headers
-   chmod 600 ~/.config/alloy-skin/curseforge.headers
-   ```
-3. Restart Alloy.
-
-The key is read only by `curl` in the loader. The page scripts never see it, and it's only sent to `api.curseforge.com`. Without a key, everything else works and CurseForge tells you how to add one.
+## How it works
+Alloy is closed source, so nothing is patched. A small `LD_PRELOAD` library (`shim/alloyskin.c`) adds `skin/skin.css` as a user stylesheet and `skin/skin.js` as a page script to Alloy's web view. It also turns off WebKit's 60 fps preference and gives the java process the GPU environment.
 
 ## Undo
-Start Alloy normally (the AppImage) instead of `alloy-skinned`, and delete `~/.local/lib/alloy-skin` and `~/.config/alloy-skin`.
+Start `~/Applications/Alloy.AppImage` directly, and delete `~/.local/lib/alloy-skin` and `~/.config/alloy-skin`.

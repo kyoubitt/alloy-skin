@@ -1,0 +1,101 @@
+/* Alloy skin: polish on top of Alloy's own UI.
+ * A user stylesheet, so every rule needs !important. Colours come from Alloy's scheme variables
+ * (--bg, --bg-elevated, --text, --accent…), never fixed values, so every colour scheme still works.
+ * Layout is left to Alloy: no display/position/size changes on its grid or cards, so Arrange cards keeps working. */
+
+/* ---------- surfaces: solid enough to read over any background picture ---------- */
+.panel, .card.panel, aside.details.panel {
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important;
+  border: 1px solid var(--seam-soft) !important;
+  box-shadow: none !important;
+}
+.dialog.panel, .menu {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--seam) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45) !important;
+}
+
+/* ---------- text: one muted level that stays readable ---------- */
+.faint, .muted, p.count, .card .faint.small { color: var(--text-muted) !important; }
+.card .list .faint, .card .list span:last-child:not(:first-child) { color: var(--text-muted) !important; font-variant-numeric: tabular-nums !important; }
+.card header.bar h3 { font-size: .95rem !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+
+/* ---------- instance header: plain info line instead of hard-to-read pills ---------- */
+main header.head h1 { letter-spacing: -.01em !important; }
+main header.head ul.chips { gap: 0 !important; }
+main header.head ul.chips > li {
+  border: none !important; background: none !important; padding: 0 !important;
+  color: var(--text-muted) !important; font-size: .88rem !important;
+}
+main header.head ul.chips > li + li::before { content: "·" !important; margin: 0 .55em !important; color: var(--text-faint) !important; }
+main header.head ul.chips > li svg { width: 14px !important; height: 14px !important; margin-right: 5px !important; vertical-align: -2px !important; }
+
+/* ---------- buttons: the accent is for Play (and the one main action of a dialog) only ---------- */
+.card .actions .btn.install {
+  background: none !important; border: 1px solid var(--seam) !important; color: var(--text) !important; box-shadow: none !important;
+}
+.card .actions .btn.install:hover { background: color-mix(in srgb, var(--text) 8%, transparent) !important; border-color: color-mix(in srgb, var(--text) 25%, transparent) !important; }
+.card .actions .btn-ghost { color: var(--text-muted) !important; }
+.card .actions .btn-ghost:hover { color: var(--text) !important; background: color-mix(in srgb, var(--text) 8%, transparent) !important; }
+.btn:focus-visible, button:focus-visible, .input:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent) !important; outline-offset: 2px !important; }
+
+/* ---------- Mod updates: long version strings end in "…" instead of crowding the row ---------- */
+.card .body ul li { min-width: 0 !important; }
+.card .body ul li > span.name { flex: 0 1 auto !important; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+.card .body ul li > span.faint.small { flex: 0 1 auto !important; min-width: 0 !important; max-width: 55% !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; direction: rtl !important; text-align: right !important; }
+
+/* ---------- Arrange cards: a visible resize corner and a clear outline while editing ---------- */
+.grid.editing > .card { outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent) !important; outline-offset: -1px !important; }
+.grid.editing > .card .grip {
+  width: 18px !important; height: 18px !important; opacity: 1 !important;
+  border-right: 3px solid var(--accent) !important; border-bottom: 3px solid var(--accent) !important; border-radius: 0 0 6px 0 !important;
+}
+
+/* ---------- small scrollbars ---------- */
+::-webkit-scrollbar { width: 8px !important; height: 8px !important; background: transparent !important; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--text) 18%, transparent) !important; border-radius: 4px !important; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--text) 30%, transparent) !important; }
+
+/* ---------- Play time: hidden (classic home panel, and the card in the card layout, tagged by skin.js) ---------- */
+section.panel.playtime, section.card.skin-playtime { display: none !important; }
+
+/* ---------- readable small text everywhere: no grey below --text-muted ---------- */
+.faint, .muted, .sub, h2.sub, p.count, small, .small,
+main .rows .row > span, main .rows .row .loader,
+.hint, .note, .axis { color: var(--text-muted) !important; opacity: 1 !important; }
+main .rows .row .name { color: var(--text) !important; }
+/* labels beside checkboxes and switches read as normal text */
+label:has(> input[type=checkbox]), label:has(> input[type=radio]), label:has(> .switch) { color: var(--text) !important; opacity: 1 !important; }
+/* disabled buttons look disabled, not invisible */
+.btn:disabled, button:disabled { opacity: .5 !important; color: var(--text) !important; }
+
+/* ---------- nothing sits straight on the background picture ---------- */
+/* Home's recent rows (classic layouts) get a panel like the cards below them */
+main .rows {
+  padding: 6px !important; border-radius: var(--radius-md, 10px) !important;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
+}
+main .rows .row:hover { background: color-mix(in srgb, var(--text) 6%, transparent) !important; }
+/* loose headings, labels and text links directly on the page get a small backing */
+main > h1, main > h2.sub, main > .head > h1, main label:not(.panel label):not(.card label):not(.dialog label):has(> input[type=checkbox]),
+main .btn-ghost:not(.panel .btn-ghost):not(.card .btn-ghost):not(.dialog .btn-ghost):not(.square) {
+  padding: 2px 10px !important; border-radius: var(--radius-sm, 6px) !important;
+  background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important;
+}
+main > h1, main > .head > h1 { width: fit-content !important; }
+main > h2.sub { width: fit-content !important; }
+/* tab bars (instance page, Skins) sit on a strip */
+main nav.tabs {
+  padding: 0 6px !important; border-radius: var(--radius-md, 10px) !important;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
+}
+main nav.tabs .tab:not(.active) { color: var(--text-muted) !important; }
+/* the instance's mod / pack / world lists */
+main section.body ul.items {
+  padding: 4px 6px !important; border-radius: var(--radius-md, 10px) !important;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
+}
+main section.body ul.items li.header { color: var(--text-muted) !important; }
+/* Servers group labels and the "Find the mod that crashes the game" link */
+main h3.group { width: fit-content !important; padding: 2px 10px !important; border-radius: var(--radius-sm, 6px) !important; background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important; color: var(--text-muted) !important; }
+main section.body > .btn-ghost.link, main section.body .btn.btn-ghost.link { padding: 3px 10px !important; border-radius: var(--radius-sm, 6px) !important; background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important; }
