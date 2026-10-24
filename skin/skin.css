@@ -161,3 +161,13 @@ main .console:has(> p.empty) { display: grid !important; place-items: center !im
 main .console > p.empty { text-align: center !important; margin: 0 !important; }
 main .bar > select, main .bar > .select { flex: 0 1 150px !important; min-width: 100px !important; }
 main aside.side > section.panel :is(h2, h3) { color: var(--text) !important; font-size: .95rem !important; font-weight: 600 !important; }
+
+/* ---------- Servers: Join always sits in the same place, whether or not "Add to my list" is next to it ---------- */
+main article.card.panel.lite { grid-template-columns: 56px minmax(0, 1fr) auto 236px !important; }
+main article.card.panel.lite > .actions { justify-content: flex-start !important; }
+
+/* ---------- small grey text sitting straight on the picture ("All instances", "2 worlds", "Install into", "Sort"…) ---------- */
+main :is(.faint, .muted, .sub, small, .count, .back, .link):not(.panel *, .card *, .row *, .dialog *, .menu *, .rows *) {
+  color: color-mix(in srgb, var(--text) 82%, transparent) !important;
+}
+html[data-theme=dark] main :is(.faint, .muted, .sub, small, .count, .back, .link):not(.panel *, .card *, .row *, .dialog *, .menu *, .rows *) { text-shadow: 0 1px 3px rgb(0 0 0 / .55) !important; }
