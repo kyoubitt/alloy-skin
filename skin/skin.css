@@ -76,14 +76,6 @@ main .rows {
   background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
 }
 main .rows .row:hover { background: color-mix(in srgb, var(--text) 6%, transparent) !important; }
-/* loose headings, labels and text links directly on the page get a small backing */
-main > h1, main > h2.sub, main > .head > h1, main label:not(.panel label):not(.card label):not(.dialog label):has(> input[type=checkbox]),
-main .btn-ghost:not(.panel .btn-ghost):not(.card .btn-ghost):not(.dialog .btn-ghost):not(.square) {
-  padding: 2px 10px !important; border-radius: var(--radius-sm, 6px) !important;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important;
-}
-main > h1, main > .head > h1 { width: fit-content !important; }
-main > h2.sub { width: fit-content !important; }
 /* tab bars (instance page, Skins) sit on a strip */
 main nav.tabs {
   padding: 0 6px !important; border-radius: var(--radius-md, 10px) !important;
@@ -96,6 +88,43 @@ main section.body ul.items {
   background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important; border: 1px solid var(--seam-soft) !important;
 }
 main section.body ul.items li.header { color: var(--text-muted) !important; }
-/* Servers group labels and the "Find the mod that crashes the game" link */
-main h3.group { width: fit-content !important; padding: 2px 10px !important; border-radius: var(--radius-sm, 6px) !important; background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important; color: var(--text-muted) !important; }
-main section.body > .btn-ghost.link, main section.body .btn.btn-ghost.link { padding: 3px 10px !important; border-radius: var(--radius-sm, 6px) !important; background: color-mix(in srgb, var(--bg-elevated) 85%, transparent) !important; }
+
+/* ---------- the page area: an even shade over the background picture, so headings, info lines and icons read without boxes ---------- */
+main.content { background: color-mix(in srgb, var(--bg) 42%, transparent) !important; overflow-x: clip !important; }
+/* nothing scrolls sideways, not even when a carousel scrolls itself into view */
+html, body, .shell, .shell > .body { overflow-x: clip !important; }
+html[data-layout=hero] main.content { background: linear-gradient(to top, color-mix(in srgb, var(--bg) 75%, transparent), color-mix(in srgb, var(--bg) 15%, transparent) 65%) !important; }
+html[data-theme=dark] :is(main > h1, main > h2, main .head h1, main .head li, main .sec > h2, main .hero .info, main .hero .server) { text-shadow: 0 1px 3px rgb(0 0 0 / .5) !important; }
+main header.head .tools .btn-ghost.square { color: var(--text) !important; }
+main header.head .tools .btn-ghost.square:hover { background: color-mix(in srgb, var(--text) 10%, transparent) !important; }
+
+/* ---------- Home rows (classic layouts): the name shrinks first, nothing pokes out of the panel ---------- */
+main .rows .row { grid-template-columns: 32px minmax(60px, 1fr) repeat(6, auto) !important; }
+main .rows .row > span { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+main .rows .row > span.play { overflow: visible !important; }
+@media (max-width: 900px) { main .rows .row > span.faint:nth-of-type(5) { display: none !important; } }
+
+/* ---------- card grid: columns can shrink, so it never runs off the side ---------- */
+main .grid { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
+main .grid > .card { min-width: 0 !important; }
+/* narrower windows: cards flow two per row, then one per row (left alone while arranging) */
+@media (max-width: 1250px) {
+  main .grid:not(.editing) { grid-auto-flow: row dense !important; }
+  main .grid:not(.editing) > .card { grid-column: auto / span 6 !important; grid-row-start: auto !important; }
+  main .grid:not(.editing) > .card:is([style*="span 8"], [style*="span 9"], [style*="span 10"], [style*="span 11"], [style*="span 12"]) { grid-column: auto / span 12 !important; }
+}
+@media (max-width: 850px) { main .grid:not(.editing) > .card { grid-column: auto / span 12 !important; } }
+/* empty cards say so quietly in the middle instead of in a corner */
+.card .body:not(:has(ul, ol, dl, .frame, img)) > p.faint.small { display: flex !important; align-items: center !important; justify-content: center !important; text-align: center !important; height: 100% !important; margin: 0 !important; }
+
+/* ---------- cards home: instances without a picture, and the New instance tile ---------- */
+main article.card .pic.none { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--bg-elevated)), var(--bg-elevated)) !important; }
+main .cards > button.new {
+  display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 8px !important;
+  color: var(--text-muted) !important; background: color-mix(in srgb, var(--bg-elevated) 55%, transparent) !important;
+  border: 1px dashed color-mix(in srgb, var(--text) 25%, transparent) !important;
+}
+main .cards > button.new:hover { color: var(--text) !important; border-color: color-mix(in srgb, var(--accent) 60%, transparent) !important; }
+
+/* ---------- Settings: a field's hint goes under its label instead of running into it ---------- */
+label.field > span:first-child > .faint { display: block !important; margin-top: 2px !important; font-size: .82em !important; font-weight: 400 !important; }
